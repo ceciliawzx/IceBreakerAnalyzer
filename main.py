@@ -1,7 +1,8 @@
+from typing import Any, Dict
+
 from sentence_transformers import SentenceTransformer
 import torch
 from nomarlize_countries import normalize_country_name
-
 
 # Load a pre-trained model
 model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -37,11 +38,11 @@ def analyze_user_similarities(users):
     reports = {}
 
     for i, userA in enumerate(users):
-        similar_cities = []
-        similar_countries = []
-        similar_feelings = []
-        similar_activities = []
-        similar_foods = []
+        similar_cities = {}
+        similar_countries = {}
+        similar_feelings = {}
+        similar_activities = {}
+        similar_foods = {}
 
         for j, userB in enumerate(users):
             if i == j:
@@ -57,16 +58,18 @@ def analyze_user_similarities(users):
             # TODO: adjust thresholds based on testing
             # -1 (strong different) <= similarity <= 1 (strong similar)
             if city_similarity > 0.8:  # Higher threshold for cities and countries
-                similar_cities.append(f"{userB['userID']} is from a similar city ({userB['city']})")
+                similar_cities[userB['userID']] = f"{userB['userID']} is from a similar city! ({userB['city']})"
             if country_similarity > 0.9:
-                similar_countries.append(f"{userB['userID']} is from the same country as you! ({userB['country']})")
+                similar_countries[
+                    userB['userID']] = f"{userB['userID']} is from the same country as you! ({userB['country']})"
             if feeling_similarity > 0.5:
-                similar_feelings.append(f"{userB['firstName']} has the same kind feeling as you ({userB['feeling']})!")
+                similar_feelings[userB['userID']] = f"{userB['firstName']} feels similar as you! ({userB['feeling']})!"
                 # Adjust thresholds based on desired sensitivity
             if food_similarity > 0.5:
-                similar_foods.append(f"{userB['firstName']} enjoys similar foods ({userB['favFood']})")
+                similar_foods[userB['userID']] = f"{userB['firstName']} enjoys similar foods! ({userB['favFood']})"
             if activity_similarity > 0.5:
-                similar_activities.append(f"{userB['firstName']} likes similar activities ({userB['favActivity']})")
+                similar_activities[
+                    userB['userID']] = f"{userB['firstName']} likes similar activities! ({userB['favActivity']})"
 
         # Compile reports
         reports[userA['userID']] = {
@@ -80,47 +83,31 @@ def analyze_user_similarities(users):
     return reports
 
 
-users = [
-    {"userID": "A", "firstName": "UserA", "city": "New York", "country": "USA", "favActivity": "playing basketball",
-     "favFood": "chocolate cake", "feeling": "happy"},
-    {"userID": "B", "firstName": "UserB", "city": "Los Angeles", "country": "USA", "favActivity": "swimming",
-     "favFood": "sushi", "feeling": "excited"},
-    {"userID": "C", "firstName": "UserC", "city": "Chicago", "country": "USA", "favActivity": "running",
-     "favFood": "salad", "feeling": "content"},
-    {"userID": "D", "firstName": "UserD", "city": "New York", "country": "USA", "favActivity": "playing basketball",
-     "favFood": "pizza", "feeling": "happy"},
-    {"userID": "E", "firstName": "UserE", "city": "Boston", "country": "USA", "favActivity": "cycling",
-     "favFood": "chocolate cake", "feeling": "joyful"},
-    {"userID": "F", "firstName": "UserF", "city": "San Francisco", "country": "USA", "favActivity": "hiking",
-     "favFood": "burrito", "feeling": "adventurous"},
-    {"userID": "G", "firstName": "UserG", "city": "New York", "country": "USA", "favActivity": "jogging",
-     "favFood": "salad", "feeling": "good"},
-    {"userID": "H", "firstName": "UserH", "city": "Tokyo", "country": "Japan", "favActivity": "swimming",
-     "favFood": "sushi", "feeling": "excited"},
-    {"userID": "I", "firstName": "UserI", "city": "Kyoto", "country": "Japan", "favActivity": "meditating",
-     "favFood": "matcha cake", "feeling": "peaceful"},
-    {"userID": "J", "firstName": "UserJ", "city": "London", "country": "UK", "favActivity": "watching football",
-     "favFood": "fish and chips", "feeling": "energetic"},
-    {"userID": "K", "firstName": "UserK", "city": "london", "country": "United Kingdom",
-     "favActivity": "watching football", "favFood": "fish and chips", "feeling": "excied"},
-    {"userID": "L", "firstName": "UserL", "city": "Shenzhen", "country": "China", "favActivity": "violin",
-     "favFood": "chocolate", "feeling": "tired"},
-    {"userID": "M", "firstName": "UserM", "city": "Beijing", "country": "CHINA", "favActivity": "piano",
-     "favFood": "Dumplings", "feeling": "sad"},
-    {"userID": "N", "firstName": "UserN", "city": "Cambridge", "country": "UK", "favActivity": "cook",
-     "favFood": "Tart", "feeling": "ok"},
-    {"userID": "O", "firstName": "UserO", "city": "Oxford", "country": "uk", "favActivity": "baking", "favFood": "Rice",
-     "feeling": "fine"},
-    {"userID": "P", "firstName": "UserP", "city": "shanghai", "country": "china", "favActivity": "reading",
-     "favFood": "Burger", "feeling": "crying"},
-    # Add more users if needed
-]
+def generate_reports(users) -> dict[Any, dict[str, dict[Any, str]]]:
+    for user in users:
+        user['country'] = normalize_country_name(user['country'])
+    reports = analyze_user_similarities(users)
+    return reports
 
-for user in users:
-    user['country'] = normalize_country_name(user['country'])
 
-# Analyze similarities
-reports = analyze_user_similarities(users)
+# Return all reports for a specific user
+def get_reports_for_user(reports, userID):
+    return reports.get(userID, {})
 
-# Print report for a specific user, say 'J'
-print(reports['J'])
+
+# Return report of userID2 for userID1
+def get_report_for_user(reports, userID1, userID2):
+    # Fetch the report for userID1
+    report_for_user1 = reports.get(userID1, {})
+
+    report_for_user2 = {}
+
+    # Iterate through each category in reports for userID1
+    for category, details in report_for_user1.items():
+        # Check if userID2 has an entry within this category
+        if userID2 in details:
+            # If so, add the specific report for userID2 to the consolidated report
+            report_for_user2[category] = details[userID2]
+
+    # Return the consolidated report for userID2
+    return report_for_user2
