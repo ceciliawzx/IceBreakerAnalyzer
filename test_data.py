@@ -20,7 +20,7 @@ users = [
     {"userID": "J", "displayName": "UserJ", "city": "London", "country": "UK", "favActivity": "watching football",
      "favFood": "fish and chips", "feeling": "energetic"},
     {"userID": "K", "displayName": "UserK", "city": "london", "country": "United Kingdom",
-     "favActivity": "watching football", "favFood": "fish and chips", "feeling": "excied"},
+     "favActivity": "watching football", "favFood": "fish and chips", "feeling": "excited"},
     {"userID": "L", "displayName": "UserL", "city": "Shenzhen", "country": "China", "favActivity": "violin",
      "favFood": "chocolate", "feeling": "tired"},
     {"userID": "M", "displayName": "UserM", "city": "Beijing", "country": "CHINA", "favActivity": "piano",

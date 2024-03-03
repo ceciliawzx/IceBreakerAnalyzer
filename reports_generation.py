@@ -1,11 +1,12 @@
 from typing import Any
-
 from sentence_transformers import SentenceTransformer
-import torch
 from nomarlize_countries import normalize_country_name
+from interests_classification import classify_interests
+import torch
 
 # Load a pre-trained model
 model = SentenceTransformer('all-MiniLM-L6-v2')
+categories = ["sports", "food", "entertainment", "music", "travel", "reading", "movie"]
 
 
 # Function to compute embeddings
@@ -22,6 +23,7 @@ def cosine_similarity(embeddings1, embeddings2):
 
 # Function to analyze user similarities
 def analyze_user_similarities(users):
+
     cities = [user['city'] for user in users]
     countries = [user['country'] for user in users]
     feelings = [user['feeling'] for user in users]
@@ -29,11 +31,11 @@ def analyze_user_similarities(users):
     activities = [user['favActivity'] for user in users]
 
     # Compute embeddings
-    city_embeddings = compute_embeddings(cities)
-    country_embeddings = compute_embeddings(countries)
-    feeling_embeddings = compute_embeddings(feelings)
-    food_embeddings = compute_embeddings(foods)
-    activity_embeddings = compute_embeddings(activities)
+    city_embeddings: list = compute_embeddings(cities)
+    country_embeddings: list = compute_embeddings(countries)
+    feeling_embeddings: list = compute_embeddings(feelings)
+    food_embeddings: list = compute_embeddings(foods)
+    classified_activities: dict = classify_interests(activities, categories)
 
     reports = {}
 
@@ -53,21 +55,24 @@ def analyze_user_similarities(users):
             country_similarity = cosine_similarity([country_embeddings[i]], [country_embeddings[j]])[0]
             feeling_similarity = cosine_similarity([feeling_embeddings[i]], [feeling_embeddings[j]])[0]
             food_similarity = cosine_similarity([food_embeddings[i]], [food_embeddings[j]])[0]
-            activity_similarity = cosine_similarity([activity_embeddings[i]], [activity_embeddings[j]])[0]
 
             # TODO: adjust thresholds based on testing
             # -1 (strong different) <= similarity <= 1 (strong similar)
             if city_similarity > 0.8:  # Higher threshold for cities and countries
                 similar_cities[userB['userID']] = f"{userB['displayName']} is from a similar city! ({userB['city']})"
             if country_similarity > 0.9:
-                similar_countries[userB['userID']] = f"{userB['displayName']} is from the same country as you! ({userB['country']})"
+                similar_countries[
+                    userB['userID']] = f"{userB['displayName']} is from the same country as you! ({userB['country']})"
             if feeling_similarity > 0.5:
-                similar_feelings[userB['userID']] = f"{userB['displayName']} feels similar as you! ({userB['feeling']})!"
+                similar_feelings[
+                    userB['userID']] = f"{userB['displayName']} feels similar as you! ({userB['feeling']})!"
                 # Adjust thresholds based on desired sensitivity
             if food_similarity > 0.5:
                 similar_foods[userB['userID']] = f"{userB['displayName']} enjoys similar foods! ({userB['favFood']})"
-            if activity_similarity > 0.5:
-                similar_activities[userB['userID']] = f"{userB['displayName']} likes similar activities! ({userB['favActivity']})"
+            # Compare activity categories
+            if classified_activities[activities[i]] == classified_activities[activities[j]]:
+                similar_activities[userB[
+                    'userID']] = f"{userB['displayName']} likes similar activities! You both enjoy {classified_activities[activities[i]]}."
 
         # Compile reports
         reports[userA['userID']] = {
