@@ -51,7 +51,7 @@ deploy:
     # - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "cd $DEPLOY_DIRECTORY && nohup gunicorn --workers 2 --bind 0.0.0.0:$GUNICORN_PORT $APP_MODULE"
 
     # launch
-    - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "export PATH=\$PATH:/home/ice/.local/bin && cd $DEPLOY_DIRECTORY && nohup gunicorn --workers 2 --bind 0.0.0.0:$GUNICORN_PORT $APP_MODULE >/dev/null 2>&1 &"
+    - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "export PATH=\$PATH:/home/ice/.local/bin && cd $DEPLOY_DIRECTORY && nohup gunicorn --workers 2 --bind 0.0.0.0:$GUNICORN_PORT $APP_MODULE </dev/null >/dev/null 2>&1 & disown"
     - sleep 5
 
     # Show current pid
