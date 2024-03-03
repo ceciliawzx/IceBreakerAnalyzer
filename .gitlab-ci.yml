@@ -13,13 +13,14 @@ test:
   stage: test
   script:
     - pip install -r requirements.txt  # Install dependencies
+    - pip install --upgrade Flask Werkzeug # Update Werkzeug
     - pytest  # run unit tests
 
 variables:
   REMOTE_SERVER: "ljthey.co.uk"
   REMOTE_USER: "ice"
   SSH_PASSWORD: "$CI_SSH_PASSWORD"
-  DEPLOY_DIRECTORY: "IceBreaker/cicd/flask"
+  DEPLOY_DIRECTORY: "IceBreaker/flask"
   APP_MODULE: "flask_app:app"
   GUNICORN_PORT: 5000
   
