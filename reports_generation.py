@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 from sentence_transformers import SentenceTransformer
 import torch
@@ -58,18 +58,16 @@ def analyze_user_similarities(users):
             # TODO: adjust thresholds based on testing
             # -1 (strong different) <= similarity <= 1 (strong similar)
             if city_similarity > 0.8:  # Higher threshold for cities and countries
-                similar_cities[userB['userID']] = f"{userB['userID']} is from a similar city! ({userB['city']})"
+                similar_cities[userB['userID']] = f"{userB['displayName']} is from a similar city! ({userB['city']})"
             if country_similarity > 0.9:
-                similar_countries[
-                    userB['userID']] = f"{userB['userID']} is from the same country as you! ({userB['country']})"
+                similar_countries[userB['userID']] = f"{userB['displayName']} is from the same country as you! ({userB['country']})"
             if feeling_similarity > 0.5:
-                similar_feelings[userB['userID']] = f"{userB['firstName']} feels similar as you! ({userB['feeling']})!"
+                similar_feelings[userB['userID']] = f"{userB['displayName']} feels similar as you! ({userB['feeling']})!"
                 # Adjust thresholds based on desired sensitivity
             if food_similarity > 0.5:
-                similar_foods[userB['userID']] = f"{userB['firstName']} enjoys similar foods! ({userB['favFood']})"
+                similar_foods[userB['userID']] = f"{userB['displayName']} enjoys similar foods! ({userB['favFood']})"
             if activity_similarity > 0.5:
-                similar_activities[
-                    userB['userID']] = f"{userB['firstName']} likes similar activities! ({userB['favActivity']})"
+                similar_activities[userB['userID']] = f"{userB['displayName']} likes similar activities! ({userB['favActivity']})"
 
         # Compile reports
         reports[userA['userID']] = {
