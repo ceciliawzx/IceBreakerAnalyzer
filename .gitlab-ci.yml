@@ -31,7 +31,7 @@ deploy:
   script:
     - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "mkdir -p $DEPLOY_DIRECTORY"
     - sshpass -p "$SSH_PASSWORD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./* "$REMOTE_USER@$REMOTE_SERVER:$DEPLOY_DIRECTORY"
-    - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "cd $DEPLOY_DIRECTORY && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt"
-    - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "pkill -f gunicorn || true; cd $DEPLOY_DIRECTORY; source venv/bin/activate && nohup gunicorn --workers 2 --bind 0.0.0.0:$GUNICORN_PORT $APP_MODULE &>/dev/null &"
+    - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "cd $DEPLOY_DIRECTORY && pip install -r requirements.txt"
+    - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "pkill -f gunicorn || true; cd $DEPLOY_DIRECTORY && nohup gunicorn --workers 2 --bind 0.0.0.0:$GUNICORN_PORT $APP_MODULE &>/dev/null &"
   only:
     - master
