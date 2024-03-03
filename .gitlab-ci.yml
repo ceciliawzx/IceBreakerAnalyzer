@@ -32,12 +32,14 @@ deploy:
     - EXISTING_PID=$(sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "lsof -i :$GUNICORN_PORT -t || echo 'not_found'")
     - echo "Checking for existing process on port $GUNICORN_PORT"
     - echo "EXISTING_PID $EXISTING_PID"
+        # Extract the first PID from the list
+    - FIRST_PID=$(echo "$EXISTING_PID" | head -n 1)
 
-     # if existing, kill it
+    # Kill the first PID if it's not "not_found"
     - >
-      if [ "$EXISTING_PID" != "not_found" ]; then
-        echo "Killing existing process on port $GUNICORN_PORT with PID $EXISTING_PID"
-        sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "kill $EXISTING_PID"
+      if [ "$FIRST_PID" != "not_found" ]; then
+        echo "Killing existing process on port $GUNICORN_PORT with PID $FIRST_PID"
+        sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "kill $FIRST_PID"
       else
         echo "No existing process found on port $GUNICORN_PORT"
       fi
