@@ -22,13 +22,14 @@ variables:
   SSH_PASSWORD: "$CI_SSH_PASSWORD"
   DEPLOY_DIRECTORY: "IceBreaker/flask"
   APP_MODULE: "flask_app:app"
-  GUNICORN_PORT: 5000
+  # production port
+  GUNICORN_PORT: 8000
   
 deploy:
   stage: deploy
   script:
     - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "mkdir -p $DEPLOY_DIRECTORY"
     - sshpass -p "$SSH_PASSWORD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./* "$REMOTE_USER@$REMOTE_SERVER:$DEPLOY_DIRECTORY"
-    - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "pkill -f gunicorn || true; cd $DEPLOY_DIRECTORY; nohup gunicorn --workers 3 --bind 0.0.0.0:$GUNICORN_PORT $APP_MODULE &>/dev/null &"
+    - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "pkill -f gunicorn || true; cd $DEPLOY_DIRECTORY; nohup gunicorn --workers 2 --bind 0.0.0.0:$GUNICORN_PORT $APP_MODULE &>/dev/null &"
   only:
     - master
