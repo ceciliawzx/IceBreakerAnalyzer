@@ -21,8 +21,8 @@ variables:
   SSH_PASSWORD: "$CI_SSH_PASSWORD"
   DEPLOY_DIRECTORY: "IceBreaker/cicd/flask"
   APP_MODULE: "flask_app:app"
-  GUNICORN_PORT: 5000  # Specify the port Gunicorn should listen on
-
+  GUNICORN_PORT: 5000
+  
 deploy:
   stage: deploy
   script:
