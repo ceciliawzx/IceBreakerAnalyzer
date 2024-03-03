@@ -13,7 +13,6 @@ test:
   stage: test
   script:
     - pip install -r requirements.txt  # Install dependencies
-    - pip install --upgrade Flask Werkzeug # Update Werkzeug
     - pytest  # run unit tests
 
 variables:
@@ -22,13 +21,39 @@ variables:
   SSH_PASSWORD: "$CI_SSH_PASSWORD"
   DEPLOY_DIRECTORY: "IceBreaker/flask"
   APP_MODULE: "flask_app:app"
-  GUNICORN_PORT: 5000
+  # production port
+  GUNICORN_PORT: 8000
   
+
 deploy:
   stage: deploy
   script:
+    # Search for existing pid on port
+    - EXISTING_PID=$(sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "lsof -i :$GUNICORN_PORT -t || echo 'not_found'")
+    - echo "Checking for existing process on port $GUNICORN_PORT"
+    - echo "EXISTING_PID $EXISTING_PID"
+
+     # if existing, kill it
+    - >
+      if [ "$EXISTING_PID" != "not_found" ]; then
+        echo "Killing existing process on port $GUNICORN_PORT with PID $EXISTING_PID"
+        sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "kill $EXISTING_PID"
+      else
+        echo "No existing process found on port $GUNICORN_PORT"
+      fi
+
+    # make dir and copy files
     - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "mkdir -p $DEPLOY_DIRECTORY"
     - sshpass -p "$SSH_PASSWORD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./* "$REMOTE_USER@$REMOTE_SERVER:$DEPLOY_DIRECTORY"
-    - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "pkill -f gunicorn || true; cd $DEPLOY_DIRECTORY; nohup gunicorn --workers 3 --bind 0.0.0.0:$GUNICORN_PORT $APP_MODULE &>/dev/null &"
+    # # - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "cd $DEPLOY_DIRECTORY && pip install -r requirements.txt"
+    # - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "cd $DEPLOY_DIRECTORY && nohup gunicorn --workers 2 --bind 0.0.0.0:$GUNICORN_PORT $APP_MODULE"
+
+    # launch
+    - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "export PATH=\$PATH:/home/ice/.local/bin && cd $DEPLOY_DIRECTORY && nohup gunicorn --workers 2 --bind 0.0.0.0:$GUNICORN_PORT $APP_MODULE &>/dev/null  &"
+    - sleep 5
+
+    # Show current pid
+    - echo $(sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "lsof -i :$GUNICORN_PORT -t || echo 'not_found'")
+
   only:
     - master
