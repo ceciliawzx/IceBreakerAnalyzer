@@ -12,4 +12,6 @@ def handle_generate_reports():
 
 
 if __name__ == '__main__':
-    app.run(port=5000)
+    # Development port
+    app.run(port=5000, ssl_context='adhoc')
+
