@@ -1,0 +1,33 @@
+image: python:3.9
+
+stages:
+  - test
+  - deploy
+
+before_script:
+  # Install SSH client and other dependencies you might need
+  - apt-get update -yqq
+  - apt-get install -yqq sshpass
+
+test:
+  stage: test
+  script:
+    - pip install -r requirements.txt  # Install dependencies
+    - pytest  # run unit tests
+
+variables:
+  REMOTE_SERVER: "ljthey.co.uk"
+  REMOTE_USER: "ice"
+  SSH_PASSWORD: "$CI_SSH_PASSWORD"
+  DEPLOY_DIRECTORY: "IceBreaker/cicd/flask"
+  APP_MODULE: "flask_app:app"
+  GUNICORN_PORT: 5000  # Specify the port Gunicorn should listen on
+
+deploy:
+  stage: deploy
+  script:
+    - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "mkdir -p $DEPLOY_DIRECTORY"
+    - sshpass -p "$SSH_PASSWORD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./* "$REMOTE_USER@$REMOTE_SERVER:$DEPLOY_DIRECTORY"
+    - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$REMOTE_USER@$REMOTE_SERVER" "pkill -f gunicorn || true; cd $DEPLOY_DIRECTORY; nohup gunicorn --workers 3 --bind 0.0.0.0:$GUNICORN_PORT $APP_MODULE &>/dev/null &"
+  only:
+    - master
