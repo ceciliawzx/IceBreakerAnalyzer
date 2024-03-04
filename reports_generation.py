@@ -47,7 +47,7 @@ def analyze_user_similarities(users):
         similar_foods = {}
 
         for j, userB in enumerate(users):
-            if i == j:
+            if userA['userID'] == userB['userID']:
                 continue  # Skip self-comparison
 
             # Calculate similarity scores

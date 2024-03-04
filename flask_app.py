@@ -13,4 +13,4 @@ def handle_generate_reports():
 
 if __name__ == '__main__':
     # Development port
-    app.run(port=5000)
+    app.run(port=8000)
